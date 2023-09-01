@@ -36,13 +36,15 @@ flags.DEFINE_float('iou', 0.45, 'iou threshold')
 flags.DEFINE_float('score', 0.50, 'score threshold')
 flags.DEFINE_boolean('dont_show', False, 'dont show video output')
 flags.DEFINE_boolean('info', False, 'show detailed info of tracked objects')
-flags.DEFINE_boolean('count', False, 'count objects being tracked on screen')
+flags.DEFINE_integer('count', 0, 'count objects being tracked on screen')
 
 def main(_argv):
     # Definition of the parameters
     max_cosine_distance = 0.4
     nn_budget = None
     nms_max_overlap = 1.0
+    frame_num = 0
+    frame_processing_times = []
     
     # initialize deep sort
     model_filename = 'model_data/mars-small128.pb'
@@ -220,19 +222,27 @@ def main(_argv):
 
         # calculate frames per second of running detections
         fps = 1.0 / (time.time() - start_time)
+        frame_processing_times.append(time.time() - start_time)
         print("FPS: %.2f" % fps)
+        
         result = np.asarray(frame)
         result = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         
         if not FLAGS.dont_show:
             cv2.imshow("Output Video", result)
-        
-        # if output flag is set, save video file
         if FLAGS.output:
             out.write(result)
-        if cv2.waitKey(1) & 0xFF == ord('q'): break
+        if cv2.waitKey(1) & 0xFF == ord('q'): break    
+        
+    total_time = sum(frame_processing_times)
+    total_frames = len(frame_processing_times)
+    average_fps = total_frames / total_time
+    print("Average FPS: %.2f" % average_fps)
+    print("Objects tracked:", count)
+    
     cv2.destroyAllWindows()
 
+    
 if __name__ == '__main__':
     try:
         app.run(main)
