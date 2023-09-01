@@ -218,15 +218,20 @@ def main(_argv):
             if FLAGS.info:
                 print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
 
-        # calculate frames per second of running detections
-        fps = 1.0 / (time.time() - start_time)
-        print("FPS: %.2f" % fps)
-        result = np.asarray(frame)
-        result = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        
-        if not FLAGS.dont_show:
-            cv2.imshow("Output Video", result)
-        
+ # calculate frames per second of running detections and mean
+            fps = 1.0 / (time.time() - start_time) # calculate frames per second of running detections
+            fps_track.append(fps)
+            average_fps = sum(fps_track) / len(fps_track)
+            if not count: print(f"Processed frame no: {frame_num} || Current FPS: {round(fps,2)}")
+            else: print(f"Processed frame no: {frame_num} || Current FPS: {round(fps,2)} || Objects tracked: {count} || Average FPS: {round(average_fps,2)}")
+            
+            if not FLAGS.dont_show:
+                cv2.imshow("Output Video", result)
+
+            result = np.asarray(frame)
+            result = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    
+
         # if output flag is set, save video file
         if FLAGS.output:
             out.write(result)
